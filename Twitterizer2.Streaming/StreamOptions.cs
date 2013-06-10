@@ -37,7 +37,7 @@ namespace Twitterizer.Streaming
 
     public class StreamOptions
     {
-        protected StreamOptions()
+        public StreamOptions()
         {
             this.Track = new List<string>();
             this.Locations = new List<Location>();
@@ -75,5 +75,15 @@ namespace Twitterizer.Streaming
         /// <value>Boolean.</value>
         /// <remarks>Will use the recently introduced GZip compression to decrease bandwitdth.</remarks>
         public bool UseCompression { get; set; }
+        
+        #if !SILVERLIGHT        
+        /// <summary>
+        /// Gets or sets the proxy.
+        /// </summary>
+        /// <value>
+        /// The proxy.
+        /// </value>
+        public System.Net.WebProxy Proxy { get; set; }
+#endif
     }
 }

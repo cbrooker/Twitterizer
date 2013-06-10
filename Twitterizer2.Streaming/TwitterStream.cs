@@ -32,19 +32,20 @@
 // <summary>The Twitter Stream class</summary>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 namespace Twitterizer.Streaming
 {
+    using System;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Reflection;
+    using System.Text;
+    using System.Threading;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+    using Twitterizer.Core;
+
     /// <summary>
     /// The different stop reasons for stopping a stream.
     /// </summary>
@@ -65,20 +66,14 @@ namespace Twitterizer.Streaming
     }
 
     public delegate void InitUserStreamCallback(TwitterIdCollection friendIds);
-
     public delegate void StatusCreatedCallback(TwitterStatus status);
-
     public delegate void StatusDeletedCallback(TwitterStreamDeletedEvent status);
-
     public delegate void DirectMessageCreatedCallback(TwitterDirectMessage status);
-
     public delegate void DirectMessageDeletedCallback(TwitterStreamDeletedEvent status);
-
     public delegate void EventCallback(TwitterStreamEvent eventDetails);
-
     public delegate void StreamStoppedCallback(StopReasons stopreason);
-
     public delegate void RawJsonCallback(string json);
+
 
     /// <summary>
     ///   The TwitterStream class. Provides an interface to real-time status changes.
@@ -266,6 +261,45 @@ namespace Twitterizer.Streaming
         }
 
         /// <summary>
+        ///   Starts the sample stream.
+        /// </summary>
+        public IAsyncResult StartSampleStream(
+            StreamStoppedCallback streamStoppedCallback,
+            StatusCreatedCallback statusCreatedCallback,
+            StatusDeletedCallback statusDeletedCallback,
+            EventCallback eventCallback,
+            RawJsonCallback rawJsonCallback = null
+            )
+        {
+            if (request != null)
+            {
+                throw new InvalidOperationException("Stream is already open");
+            }
+
+            WebRequestBuilder builder;
+            if (Tokens == null)
+                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1/statuses/sample.json"),
+                                                HTTPVerb.POST, userAgent, NetworkCredentials);
+            else
+                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1/statuses/sample.json"),
+                                                HTTPVerb.POST, Tokens, userAgent);
+            PrepareStreamOptions(builder);
+
+            request = builder.PrepareRequest();
+
+            this.streamStoppedCallback = streamStoppedCallback;
+            this.statusCreatedCallback = statusCreatedCallback;
+            this.statusDeletedCallback = statusDeletedCallback;
+            this.eventCallback = eventCallback;
+            this.rawJsonCallback = rawJsonCallback;
+            stopReceived = false;
+#if SILVERLIGHT
+            request.AllowReadStreamBuffering = false;
+#endif
+            return request.BeginGetResponse(StreamCallback, request);
+        }
+
+        /// <summary>
         ///   Prepares the stream options.
         /// </summary>
         /// <param name = "builder">The builder.</param>
@@ -287,9 +321,14 @@ namespace Twitterizer.Streaming
                 if (StreamOptions.Track != null && StreamOptions.Track.Count > 0)
                     builder.Parameters.Add("track", string.Join(",", StreamOptions.Track.ToArray()));
 
-                if (StreamOptions.UseCompression != null)
-                    builder.Parameters.Add("UseCompression", StreamOptions.UseCompression);
-                    }
+                builder.UseCompression = StreamOptions.UseCompression;
+                
+#if !SILVERLIGHT        
+
+            if (this.StreamOptions != null)
+                builder.Proxy = this.StreamOptions.Proxy;
+#endif
+            }
         }
 
         /// <summary>
@@ -444,6 +483,7 @@ namespace Twitterizer.Streaming
                 req.Abort();
                 if (response != null)
                     response.Close();
+                request = null;
             }
         }
 
@@ -499,9 +539,24 @@ namespace Twitterizer.Streaming
             var events = obj.SelectToken("event", false);
             if (events != null)
             {
-                if (eventCallback != null && events.HasValues)
+                if (eventCallback != null)
                 {
-                    eventCallback(JsonConvert.DeserializeObject<TwitterStreamEvent>(ConvertJTokenToString(obj)));
+                    var targetobject = obj.SelectToken("target_object", false);
+                    TwitterObject endtargetobject = null;
+                    if (targetobject != null)
+                    {
+                        if (targetobject.SelectToken("subscriber_count", false) != null)
+                        {
+                            endtargetobject = JsonConvert.DeserializeObject<TwitterList>(targetobject.ToString());
+                        }
+                        else if (targetobject.SelectToken("user", false) != null)
+                        {
+                            endtargetobject = JsonConvert.DeserializeObject<TwitterStatus>(targetobject.ToString());
+                        }
+                    }
+                    var endevent = JsonConvert.DeserializeObject<TwitterStreamEvent>(obj.ToString());
+                    endevent.TargetObject = endtargetobject;
+                    this.eventCallback(endevent);
                 }
                 return;
             }
