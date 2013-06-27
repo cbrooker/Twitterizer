@@ -68,6 +68,8 @@ namespace Twitterizer.Core
             this.Tokens = tokens;
             this.OptionalProperties = optionalProperties ?? new OptionalProperties();
 
+            
+
             this.SetCommandUri(endPoint);
         }
 
@@ -126,7 +128,8 @@ namespace Twitterizer.Core
         {
             TwitterResponse<T> twitterResponse = new TwitterResponse<T>();
 
-            if (this.OptionalProperties.UseSSL)
+            //Not valid anymore. Every request to the api requires https://
+            if (true)//this.OptionalProperties.UseSSL)
             {
                 this.Uri = new Uri(this.Uri.AbsoluteUri.Replace("http://", "https://"));
             }
