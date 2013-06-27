@@ -69,5 +69,7 @@ namespace Twitterizer.Core
         /// <value>The annotations.</value>
         [JsonProperty(PropertyName = "annotations")]
         public Dictionary<string, string> Annotations { get; set; }
+
+        public dynamic RawSource { get; set; }
     }
 }

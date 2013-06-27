@@ -42,6 +42,7 @@ namespace Twitterizer.Commands
 #if !SILVERLIGHT
     [Serializable]
 #endif
+    [AuthorizedCommand]
     internal sealed class SearchCommand : TwitterCommand<TwitterSearchResultCollection>
     {
         #region Constructors

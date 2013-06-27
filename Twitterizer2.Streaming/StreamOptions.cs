@@ -75,6 +75,11 @@ namespace Twitterizer.Streaming
         /// <value>Boolean.</value>
         /// <remarks>Will use the recently introduced GZip compression to decrease bandwitdth.</remarks>
         public bool UseCompression { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether to request to send stall warnings.
+        /// </summary>
+        public bool StallWarnings { get; set; }
         
         #if !SILVERLIGHT        
         /// <summary>

@@ -48,6 +48,7 @@ namespace Twitterizer
         /// <returns>
         /// A <see cref="TwitterSearchResultCollection"/> instance.
         /// </returns>
+        [Obsolete("Every request to the api requires tokens")]
         public static TwitterResponse<TwitterSearchResultCollection> Search(string query)
         {
             return Search(query, null);
@@ -61,9 +62,23 @@ namespace Twitterizer
         /// <returns>
         /// A <see cref="TwitterSearchResultCollection"/> instance.
         /// </returns>
+        [Obsolete("Every request to the api requires tokens")]
         public static TwitterResponse<TwitterSearchResultCollection> Search(string query, SearchOptions options)
         {
             return Search(null, query, options);
+        }
+
+        /// <summary>
+        /// Searches Twitter with the the specified query.
+        /// </summary>
+        /// <param name="tokens">The tokens.</param>
+        /// <param name="query">The query.</param>
+        /// <returns>
+        /// A <see cref="TwitterSearchResultCollection"/> instance.
+        /// </returns>
+        public static TwitterResponse<TwitterSearchResultCollection> Search(OAuthTokens tokens, string query)
+        {
+            return Search(tokens, query, null);
         }
 
         /// <summary>
