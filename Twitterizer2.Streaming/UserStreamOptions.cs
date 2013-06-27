@@ -41,5 +41,14 @@ namespace Twitterizer.Streaming
         /// <value>Boolean.</value>
         /// <remarks>Will return all replies to a users stream (eg where the user doesn't follow both people replying to each other).</remarks>
         public bool AllReplies { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether to request only the user of the user and the people he follows
+        /// </summary>
+        /// <value>WithOptions</value>
+        /// <remarks>Specifies whether to return information for just the authenticating user, or include messages from accounts the user follows</remarks>
+        public WithOptions With { get; set; }
+
+        public enum WithOptions { User, Followings }
     }
 }

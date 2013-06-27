@@ -146,11 +146,11 @@ namespace Twitterizer.Streaming
         /// <value>The stream options.</value>
         public StreamOptions StreamOptions { get; set; }
 
-        /// <summary>
-        ///   Gets or sets the Basic Auth Credentials.
-        /// </summary>
-        /// <value>The Basic Auth Credentials.</value>
-        public NetworkCredential NetworkCredentials { get; set; }
+        ///// <summary>
+        /////   Gets or sets the Basic Auth Credentials.
+        ///// </summary>
+        ///// <value>The Basic Auth Credentials.</value>
+        //public NetworkCredential NetworkCredentials { get; set; }
 
         #region IDisposable Members
 
@@ -191,7 +191,7 @@ namespace Twitterizer.Streaming
                 throw new InvalidOperationException("Stream is already open");
             }
 
-            WebRequestBuilder builder = new WebRequestBuilder(new Uri("https://userstream.twitter.com/2/user.json"),
+            WebRequestBuilder builder = new WebRequestBuilder(new Uri("https://userstream.twitter.com/1.1/user.json"),
                                                               HTTPVerb.GET, Tokens, userAgent);
 
             PrepareStreamOptions(builder);
@@ -200,6 +200,9 @@ namespace Twitterizer.Streaming
             {
                 if ((StreamOptions as UserStreamOptions).AllReplies)
                     builder.Parameters.Add("replies", "all");
+
+                if ((StreamOptions as UserStreamOptions).With == UserStreamOptions.WithOptions.Followings)
+                    builder.Parameters.Add("with", "followings");
             }
 
             request = builder.PrepareRequest();
@@ -239,10 +242,9 @@ namespace Twitterizer.Streaming
 
             WebRequestBuilder builder;
             if (Tokens == null)
-                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1/statuses/filter.json"),
-                                                HTTPVerb.POST, userAgent, NetworkCredentials);
+                throw new ArgumentNullException("Tokens", "You need to input tokens for the streaming api.");
             else
-                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1/statuses/filter.json"),
+                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1.1/statuses/filter.json"),
                                                 HTTPVerb.POST, Tokens, userAgent);
             PrepareStreamOptions(builder);
 
@@ -278,10 +280,9 @@ namespace Twitterizer.Streaming
 
             WebRequestBuilder builder;
             if (Tokens == null)
-                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1/statuses/sample.json"),
-                                                HTTPVerb.POST, userAgent, NetworkCredentials);
+                throw new ArgumentNullException("Tokens", "You need to input tokens for the streaming api.");
             else
-                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1/statuses/sample.json"),
+                builder = new WebRequestBuilder(new Uri("https://stream.twitter.com/1.1/statuses/sample.json"),
                                                 HTTPVerb.POST, Tokens, userAgent);
             PrepareStreamOptions(builder);
 
@@ -320,6 +321,9 @@ namespace Twitterizer.Streaming
 
                 if (StreamOptions.Track != null && StreamOptions.Track.Count > 0)
                     builder.Parameters.Add("track", string.Join(",", StreamOptions.Track.ToArray()));
+
+                if (StreamOptions.StallWarnings)
+                    builder.Parameters.Add("stall_warnings", "true");
 
                 builder.UseCompression = StreamOptions.UseCompression;
                 
@@ -566,7 +570,10 @@ namespace Twitterizer.Streaming
             {
                 if (statusCreatedCallback != null && user.HasValues)
                 {
-                    statusCreatedCallback(JsonConvert.DeserializeObject<TwitterStatus>(ConvertJTokenToString(obj)));
+                    var tw = JsonConvert.DeserializeObject<TwitterStatus>(ConvertJTokenToString(obj));
+                    tw.RawSource = JsonConvert.DeserializeObject<dynamic>(ConvertJTokenToString(obj));
+                    statusCreatedCallback(tw);
+                    //statusCreatedCallback(JsonConvert.DeserializeObject<TwitterStatus>(ConvertJTokenToString(obj)));
                 }
                 return;
             }
