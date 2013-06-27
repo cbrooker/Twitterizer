@@ -50,14 +50,14 @@ namespace Twitterizer
         public OptionalProperties()
         {
             // Set the default values for the properties
-            this.UseSSL = false;
-            this.APIBaseAddress = "http://api.twitter.com/1/";
+            this.APIBaseAddress = "https://api.twitter.com/1.1/";
         }
 
         /// <include file='OptionalProperties.xml' path='OptionalProperties/Property[@name="UseSSL"]/*'/>
         /// <summary>
         ///  Allows configuration of the base address for API method requests for support for 3rd party 'twitter-like' APIs.
         /// </summary>
+        [Obsolete("All requests to the twitter api require https from version 1.1")]
         public bool UseSSL { get; set; }
 
         /// <include file='OptionalProperties.xml' path='OptionalProperties/Property[@name="APIBaseAddress"]/*'/>

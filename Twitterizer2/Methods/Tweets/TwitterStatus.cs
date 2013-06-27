@@ -222,6 +222,15 @@ namespace Twitterizer
         /// <value><c>true</c> if retweeted; otherwise, <c>false</c>.</value>
         [DataMember, JsonProperty(PropertyName = "retweeted")]
         public bool Retweeted { get; set; }
+        /// <summary>
+        /// This value contains the rawsource of a tweet.
+        /// </summary>
+        public dynamic RawSource { get; set; }
+
+        public override string ToString()
+        {
+            return String.Format("Twitter status\t{0}\t{1}", User.ScreenName, Text);
+        }
         #endregion
 
         /// <summary>
